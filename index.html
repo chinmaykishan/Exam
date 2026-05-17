@@ -1,0 +1,814 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>NEET OMR Practice</title>
+<style>
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{background:#050d1a;color:#fff;font-family:'Courier New',monospace;min-height:100vh}
+  button{cursor:pointer;font-family:'Courier New',monospace}
+  input[type=number]{-moz-appearance:textfield}
+  input[type=number]::-webkit-inner-spin-button,
+  input[type=number]::-webkit-outer-spin-button{-webkit-appearance:none}
+  ::-webkit-scrollbar{width:5px;height:5px}
+  ::-webkit-scrollbar-track{background:#0a1628}
+  ::-webkit-scrollbar-thumb{background:#1e3a5f;border-radius:4px}
+
+  /* Layout */
+  .page{min-height:100vh;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:2rem}
+  .card{background:#0d1f35;border:1px solid #1e3a5f;border-radius:14px}
+  .hidden{display:none!important}
+
+  /* Setup */
+  #setupPage .inner{background:#0d1f35;border:1px solid #1e3a5f;border-radius:14px;padding:2.5rem;width:100%;max-width:460px}
+  .field{margin-bottom:20px}
+  .field label{display:block;font-size:11px;color:#64748b;text-transform:uppercase;letter-spacing:.1em;margin-bottom:6px}
+  .spinRow{display:flex;gap:8px;align-items:center}
+  .spinBtn{background:#1e3a5f;border:none;color:#fff;width:34px;height:34px;border-radius:7px;font-size:18px;flex-shrink:0;transition:background .15s}
+  .spinBtn:hover{background:#2a4f7f}
+  .numInput{flex:1;background:#0a1628;border:1px solid #1e3a5f;color:#fff;padding:.5rem;border-radius:7px;text-align:center;font-size:1.05rem;font-family:'Courier New',monospace}
+  .info-box{background:#081628;border-left:3px solid #0ea5e9;border-radius:6px;padding:.65rem 1rem;font-size:.75rem;color:#475569;margin-bottom:24px}
+  .summary-box{background:#0a1628;border-radius:8px;padding:.6rem 1rem;font-size:.78rem;color:#64748b;margin-bottom:24px;text-align:center}
+  .summary-box span{color:#38bdf8;font-weight:bold}
+
+  /* Buttons */
+  .btn{border:none;color:#fff;padding:.65rem 1.5rem;border-radius:8px;font-family:'Courier New',monospace;font-weight:bold;font-size:.85rem;letter-spacing:.04em;transition:opacity .15s}
+  .btn:hover{opacity:.85}
+  .btn-blue{background:#0ea5e9}
+  .btn-green{background:#10b981}
+  .btn-red{background:#dc2626}
+  .btn-dark{background:#1e3a5f}
+  .btn-purple{background:#7c3aed}
+  .btn-full{width:100%;padding:.85rem;font-size:.95rem}
+
+  /* Answer Key */
+  #keyPage{padding:1.5rem;align-items:flex-start;justify-content:flex-start}
+  #keyPage .inner{max-width:960px;width:100%;margin:0 auto}
+  .topbar{display:flex;align-items:center;justify-content:space-between;margin-bottom:20px;flex-wrap:wrap;gap:12px}
+  .upload-zone{background:#0d1f35;border:2px dashed #1e3a5f;border-radius:10px;padding:1.25rem;margin-bottom:20px;text-align:center;cursor:pointer;transition:border-color .2s}
+  .upload-zone:hover{border-color:#0ea5e9}
+  .upload-zone img{max-width:100%;max-height:280px;border-radius:8px;border:1px solid #1e3a5f}
+  .upload-placeholder{color:#334155;padding:1.5rem}
+  .upload-placeholder .icon{font-size:2.5rem;margin-bottom:6px}
+  .upload-placeholder p{color:#475569;margin-bottom:4px}
+  .upload-placeholder small{color:#334155;font-size:.72rem}
+  .key-grid-wrap{background:#0d1f35;border:1px solid #1e3a5f;border-radius:10px;padding:1.25rem}
+  .key-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(210px,1fr));gap:6px;max-height:420px;overflow-y:auto;padding-right:4px}
+  .key-row{display:flex;align-items:center;gap:5px;padding:5px 8px;background:#081628;border-radius:7px;border:1px solid #1e3a5f;transition:border-color .2s}
+  .key-row.set{border-color:#0ea5e9}
+  .key-qnum{color:#334155;font-size:.72rem;min-width:26px;text-align:right}
+  .bubble{border-radius:50%;font-weight:bold;font-family:'Courier New',monospace;display:flex;align-items:center;justify-content:center;transition:all .18s;flex-shrink:0;border:2.5px solid #1e3a5f;background:transparent;color:#4a5568}
+  .bubble:hover{border-color:#475569}
+  .bubble.sel-A,.bubble.sel-B,.bubble.sel-C,.bubble.sel-D{color:#fff}
+  .bubble.sel-A{background:#3b82f6;border-color:#3b82f6;box-shadow:0 0 12px #3b82f655}
+  .bubble.sel-B{background:#10b981;border-color:#10b981;box-shadow:0 0 12px #10b98155}
+  .bubble.sel-C{background:#f59e0b;border-color:#f59e0b;box-shadow:0 0 12px #f59e0b55}
+  .bubble.sel-D{background:#ef4444;border-color:#ef4444;box-shadow:0 0 12px #ef444455}
+  .bubble.correct{background:#10b981;border-color:#10b981;color:#fff;box-shadow:0 0 16px #10b98144}
+  .bubble.wrong{background:#ef4444;border-color:#ef4444;color:#fff}
+  .key-footer{margin-top:12px;font-size:.72rem;color:#475569;text-align:center}
+
+  /* Test Header */
+  #testHeader{background:#0a1628;border-bottom:1px solid #1e3a5f;padding:.6rem 1.25rem;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:20;flex-wrap:wrap;gap:8px}
+  .timer{font-size:1.4rem;font-weight:bold;letter-spacing:.12em;transition:color .5s}
+  .hdr-actions{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+  .sm-btn{background:#1e3a5f;border:none;color:#94a3b8;padding:.35rem .7rem;border-radius:6px;font-family:'Courier New',monospace;font-size:.72rem;transition:background .15s}
+  .sm-btn:hover{background:#2a4f7f}
+
+  /* Grid View */
+  #gridView{padding:1.25rem;overflow-y:auto;flex:1}
+  #gridView .inner{max-width:1000px;margin:0 auto;display:grid;grid-template-columns:repeat(auto-fill,minmax(250px,1fr));gap:6px}
+  .grid-row{display:flex;align-items:center;gap:6px;padding:6px 10px;background:#0d1f35;border-radius:8px;border:1px solid #1e3a5f;transition:border-color .2s}
+  .grid-row.answered{border-color:#0ea5e9}
+  .grid-qnum{color:#334155;font-size:.72rem;min-width:28px;text-align:right}
+
+  /* Sequential View */
+  #seqView{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:2rem}
+  .progress-bar-wrap{width:100%;max-width:480px;margin-bottom:24px}
+  .progress-info{display:flex;justify-content:space-between;font-size:.72rem;color:#475569;margin-bottom:6px}
+  .progress-track{background:#1e3a5f;border-radius:4px;height:5px}
+  .progress-fill{background:linear-gradient(90deg,#0ea5e9,#38bdf8);height:5px;border-radius:4px;transition:width .3s}
+  .seq-card{background:#0d1f35;border:1px solid #1e3a5f;border-radius:16px;padding:2.5rem;width:100%;max-width:480px;text-align:center;transition:border-color .3s}
+  .seq-card.answered{border-color:#0ea5e9}
+  .seq-label{font-size:.68rem;color:#475569;text-transform:uppercase;letter-spacing:.12em;margin-bottom:4px}
+  .seq-qnum{font-size:5rem;font-weight:bold;color:#1e4976;line-height:1;margin-bottom:6px;user-select:none}
+  .seq-hint{height:18px;margin-bottom:20px;font-size:.75rem;color:#334155;transition:color .2s}
+  .seq-hint.selected{color:#0ea5e9}
+  .bubbles-row{display:flex;justify-content:center;gap:18px}
+  .big-bubble{width:62px;height:62px;font-size:16px}
+  .seq-nav{display:flex;gap:12px;margin-top:22px;align-items:center}
+  .dots-row{display:flex;gap:4px;overflow:hidden;max-width:160px;align-items:center}
+  .dot{border-radius:50%;border:none;padding:0;flex-shrink:0;cursor:pointer;transition:all .15s;background:#1e3a5f}
+  .dot.cur{width:10px;height:10px;background:#0ea5e9}
+  .dot.done{background:#10b981}
+  .dot.plain{width:8px;height:8px}
+  .skip-row{margin-top:16px;display:flex;gap:8px;flex-wrap:wrap;justify-content:center;max-width:480px}
+  .skip-btn{background:#0a1628;border:1px solid #1e3a5f;color:#64748b;padding:.25rem .6rem;border-radius:5px;font-family:'Courier New',monospace;font-size:.68rem;transition:all .15s}
+  .skip-btn:hover{border-color:#0ea5e9;color:#0ea5e9}
+
+  /* Overlays */
+  .overlay{position:fixed;inset:0;background:rgba(0,0,0,.75);z-index:100;display:flex;align-items:center;justify-content:center;padding:1rem}
+  .overlay-box{background:#0d1f35;border:1px solid #1e3a5f;border-radius:12px;padding:1.25rem;max-width:90vw;max-height:85vh;overflow:auto;width:600px}
+  .overlay-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:12px}
+  .close-btn{background:none;border:none;color:#64748b;font-size:18px;line-height:1}
+  .palette-legend{display:flex;gap:12px;margin-bottom:12px;font-size:.7rem;color:#94a3b8;flex-wrap:wrap}
+  .legend-dot{display:inline-block;width:12px;height:12px;border-radius:2px;margin-right:4px;vertical-align:middle}
+  .palette-grid{display:flex;flex-wrap:wrap;gap:6px}
+  .pal-btn{width:36px;height:36px;border-radius:6px;border:none;color:#fff;font-family:'Courier New',monospace;font-size:.72rem;font-weight:bold;transition:transform .1s}
+  .pal-btn:hover{transform:scale(1.1)}
+  .pal-btn.pal-attempted{background:#10b981}
+  .pal-btn.pal-current{background:#0ea5e9}
+  .pal-btn.pal-plain{background:#1e3a5f}
+
+  /* Review */
+  #reviewPage .inner{width:100%;max-width:500px}
+  .rev-card{background:#0d1f35;border:2px solid #1e3a5f;border-radius:16px;padding:2.5rem;text-align:center;transition:border-color .3s}
+  .rev-status{font-size:.72rem;letter-spacing:.12em;margin-bottom:6px;text-transform:uppercase}
+  .rev-qnum{font-size:4rem;font-weight:bold;color:#1e4976;line-height:1;margin-bottom:24px}
+  .rev-bubbles{display:flex;justify-content:center;gap:16px;margin-bottom:20px}
+  .rev-bubble{width:58px;height:58px;font-size:15px}
+  .rev-info{font-size:.78rem;color:#64748b}
+  .rev-nav{display:flex;gap:12px;margin-top:20px;justify-content:center}
+
+  /* Result */
+  #resultPage .inner{width:100%;max-width:480px}
+  .score-ring{width:150px;height:150px;border-radius:50%;display:flex;flex-direction:column;align-items:center;justify-content:center;margin:0 auto 10px;background:#0d1f35;border:8px solid #10b981;transition:border-color .5s}
+  .score-ring .score-num{font-size:2.2rem;font-weight:bold;color:#fff}
+  .score-ring .score-max{font-size:.7rem;color:#475569}
+  .score-pct{text-align:center;font-weight:bold;font-size:1.1rem;margin-bottom:4px}
+  .score-msg{text-align:center;font-size:.72rem;color:#475569;margin-bottom:28px}
+  .stats-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:16px}
+  .stat-card{background:#0d1f35;border-radius:12px;padding:1rem;text-align:center;border:1px solid transparent}
+  .stat-icon{font-size:1.3rem;margin-bottom:4px}
+  .stat-val{font-size:1.6rem;font-weight:bold;line-height:1}
+  .stat-label{font-size:.65rem;color:#475569;text-transform:uppercase;letter-spacing:.06em;margin-top:4px}
+  .stat-sub{font-size:.68rem;color:#334155;margin-top:2px}
+  .scheme-box{background:#0d1f35;border:1px solid #1e3a5f;border-radius:10px;padding:.85rem;font-size:.73rem;color:#475569;text-align:center;margin-bottom:16px}
+  .result-actions{display:flex;gap:10px}
+  .result-actions .btn{flex:1;padding:.8rem}
+</style>
+</head>
+<body>
+
+<!-- ════════════════ SETUP ════════════════ -->
+<div id="setupPage" class="page">
+  <div class="inner">
+    <div style="margin-bottom:28px">
+      <h1 style="font-size:2rem;font-weight:bold;color:#38bdf8">NEET OMR</h1>
+      <p style="color:#475569;font-size:.8rem;margin-top:4px">Practice Test Setup</p>
+    </div>
+    <div class="info-box">Default: 180 Questions · +4 / −1 · 3 Hours (NEET pattern)</div>
+
+    <div class="field">
+      <label>Total Questions</label>
+      <div class="spinRow">
+        <button class="spinBtn" onclick="spin('numQ',-1)">−</button>
+        <input class="numInput" type="number" id="numQ" value="180" min="1" max="300" oninput="clamp(this,1,300);updateSummary()"/>
+        <button class="spinBtn" onclick="spin('numQ',1)">+</button>
+      </div>
+    </div>
+    <div class="field">
+      <label>Marks per Correct Answer</label>
+      <div class="spinRow">
+        <button class="spinBtn" onclick="spin('marksOk',-1)">−</button>
+        <input class="numInput" type="number" id="marksOk" value="4" min="1" max="10" oninput="clamp(this,1,10);updateSummary()"/>
+        <button class="spinBtn" onclick="spin('marksOk',1)">+</button>
+      </div>
+    </div>
+    <div class="field">
+      <label>Negative Mark (per wrong)</label>
+      <div class="spinRow">
+        <button class="spinBtn" onclick="spin('marksNeg',-1)">−</button>
+        <input class="numInput" type="number" id="marksNeg" value="1" min="0" max="5" oninput="clamp(this,0,5)"/>
+        <button class="spinBtn" onclick="spin('marksNeg',1)">+</button>
+      </div>
+    </div>
+    <div class="field">
+      <label>Timer (minutes)</label>
+      <div class="spinRow">
+        <button class="spinBtn" onclick="spin('timerMin',-1)">−</button>
+        <input class="numInput" type="number" id="timerMin" value="180" min="1" max="360" oninput="clamp(this,1,360);updateSummary()"/>
+        <button class="spinBtn" onclick="spin('timerMin',1)">+</button>
+      </div>
+    </div>
+
+    <div class="summary-box" id="summaryBox">
+      Max Marks: <span id="sumMarks">720</span> &nbsp;|&nbsp; Duration: <span id="sumDur">3h 0m</span>
+    </div>
+
+    <button class="btn btn-blue btn-full" onclick="goAnswerKey()">NEXT: Enter Answer Key →</button>
+  </div>
+</div>
+
+<!-- ════════════════ ANSWER KEY ════════════════ -->
+<div id="keyPage" class="page hidden" style="align-items:flex-start;justify-content:flex-start;padding:1.5rem">
+  <div class="inner" style="max-width:960px;width:100%;margin:0 auto">
+    <div class="topbar">
+      <div>
+        <h1 style="font-size:1.4rem;color:#38bdf8">Answer Key</h1>
+        <p style="color:#475569;font-size:.75rem;margin-top:3px">Upload image & select correct options</p>
+      </div>
+      <div style="display:flex;gap:10px">
+        <button class="btn btn-dark" onclick="showPage('setupPage')">← Back</button>
+        <button class="btn btn-green" onclick="startTest()">▶ Start Test</button>
+      </div>
+    </div>
+
+    <div class="upload-zone" id="uploadZone" onclick="document.getElementById('imgInput').click()">
+      <input type="file" id="imgInput" accept="image/*" style="display:none" onchange="handleImgUpload(this)"/>
+      <div id="uploadPlaceholder" class="upload-placeholder">
+        <div class="icon">📄</div>
+        <p>Click to upload Answer Key image</p>
+        <small>PNG / JPG — optional, for reference</small>
+      </div>
+      <img id="uploadedImg" style="display:none;max-width:100%;max-height:280px;border-radius:8px;border:1px solid #1e3a5f"/>
+    </div>
+
+    <div class="key-grid-wrap">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px">
+        <span style="font-size:11px;color:#64748b;text-transform:uppercase;letter-spacing:.1em">Select Correct Answer per Question</span>
+        <button class="btn btn-dark" style="padding:.3rem .7rem;font-size:.7rem" onclick="clearAllCorrect()">Clear All</button>
+      </div>
+      <div class="key-grid" id="keyGrid"></div>
+      <div class="key-footer" id="keyFooter">0 / 0 answers set</div>
+    </div>
+  </div>
+</div>
+
+<!-- ════════════════ TEST ════════════════ -->
+<div id="testPage" class="hidden" style="min-height:100vh;display:flex;flex-direction:column">
+  <div id="testHeader">
+    <div style="display:flex;gap:12px;align-items:center">
+      <span style="color:#38bdf8;font-weight:bold;font-size:.9rem">NEET OMR</span>
+      <span style="color:#334155">|</span>
+      <span style="color:#64748b;font-size:.78rem" id="attemptedLabel">0/0 done</span>
+    </div>
+    <div class="timer" id="timerDisplay">00:00:00</div>
+    <div class="hdr-actions">
+      <button class="sm-btn" id="keyImgBtn" onclick="toggleOverlay('keyImgOverlay')" style="display:none">📄 Key</button>
+      <button class="sm-btn" onclick="toggleOverlay('paletteOverlay')">⊡ Palette</button>
+      <button class="sm-btn" id="viewToggleBtn" onclick="toggleView()">▦ Grid</button>
+      <button class="btn btn-red" style="padding:.35rem .75rem;font-size:.78rem" onclick="submitTest()">Submit ✓</button>
+    </div>
+  </div>
+
+  <!-- Grid View -->
+  <div id="gridView" class="hidden" style="padding:1.25rem;overflow-y:auto;flex:1">
+    <div id="gridInner" style="max-width:1000px;margin:0 auto;display:grid;grid-template-columns:repeat(auto-fill,minmax(250px,1fr));gap:6px"></div>
+  </div>
+
+  <!-- Sequential View -->
+  <div id="seqView" style="flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:2rem">
+    <div class="progress-bar-wrap">
+      <div class="progress-info">
+        <span id="seqProgressLabel">Q 1 of 180</span>
+        <span id="seqAttempted">0 attempted</span>
+      </div>
+      <div class="progress-track"><div class="progress-fill" id="progressFill" style="width:0%"></div></div>
+    </div>
+
+    <div class="seq-card" id="seqCard">
+      <div class="seq-label">Question</div>
+      <div class="seq-qnum" id="seqQNum">1</div>
+      <div class="seq-hint" id="seqHint">Tap a bubble to mark answer</div>
+      <div class="bubbles-row" id="seqBubbles"></div>
+    </div>
+
+    <div class="seq-nav">
+      <button class="btn btn-dark" id="prevBtn" onclick="navigate(-1)">← Prev</button>
+      <div class="dots-row" id="dotsRow"></div>
+      <button class="btn btn-blue" id="nextBtn" onclick="navigate(1)">Next →</button>
+    </div>
+
+    <div class="skip-row" id="skipRow"></div>
+  </div>
+</div>
+
+<!-- Palette Overlay -->
+<div id="paletteOverlay" class="overlay hidden" onclick="if(event.target===this)toggleOverlay('paletteOverlay')">
+  <div class="overlay-box">
+    <div class="overlay-header">
+      <span style="color:#38bdf8;font-weight:bold">Question Palette</span>
+      <button class="close-btn" onclick="toggleOverlay('paletteOverlay')">✕</button>
+    </div>
+    <div class="palette-legend">
+      <span><span class="legend-dot" style="background:#0ea5e9"></span>Current</span>
+      <span><span class="legend-dot" style="background:#10b981"></span>Attempted</span>
+      <span><span class="legend-dot" style="background:#1e3a5f"></span>Not attempted</span>
+    </div>
+    <div class="palette-grid" id="paletteGrid"></div>
+  </div>
+</div>
+
+<!-- Key Image Overlay -->
+<div id="keyImgOverlay" class="overlay hidden" onclick="if(event.target===this)toggleOverlay('keyImgOverlay')">
+  <div class="overlay-box" style="width:auto;max-width:90vw">
+    <div class="overlay-header">
+      <span style="color:#38bdf8;font-weight:bold">Answer Key</span>
+      <button class="close-btn" onclick="toggleOverlay('keyImgOverlay')">✕</button>
+    </div>
+    <img id="keyImgLarge" style="max-width:100%;border-radius:8px"/>
+    <button class="btn btn-red btn-full" style="margin-top:12px" onclick="toggleOverlay('keyImgOverlay')">Close</button>
+  </div>
+</div>
+
+<!-- ════════════════ REVIEW ════════════════ -->
+<div id="reviewPage" class="page hidden">
+  <div class="inner">
+    <div class="topbar" style="margin-bottom:16px">
+      <div>
+        <h2 style="color:#38bdf8;font-size:1.2rem">Review Answers</h2>
+        <p style="color:#475569;font-size:.72rem;margin-top:3px" id="revProgress">1 / 180</p>
+      </div>
+      <button class="btn btn-purple" onclick="showResult()">Skip → Results</button>
+    </div>
+    <div style="background:#1e3a5f;border-radius:4px;height:4px;margin-bottom:24px">
+      <div id="revProgressFill" style="background:#7c3aed;height:4px;border-radius:4px;transition:width .3s;width:0%"></div>
+    </div>
+
+    <div class="rev-card" id="revCard">
+      <div class="rev-status" id="revStatus"></div>
+      <div class="rev-qnum" id="revQNum">Q1</div>
+      <div class="rev-bubbles" id="revBubbles"></div>
+      <div class="rev-info" id="revInfo"></div>
+    </div>
+
+    <div class="rev-nav">
+      <button class="btn btn-dark" id="revPrevBtn" onclick="reviewNav(-1)">← Prev</button>
+      <button class="btn btn-purple" id="revNextBtn" onclick="reviewNav(1)">Next →</button>
+    </div>
+  </div>
+</div>
+
+<!-- ════════════════ RESULT ════════════════ -->
+<div id="resultPage" class="page hidden">
+  <div class="inner">
+    <h1 style="text-align:center;color:#38bdf8;margin-bottom:28px;font-size:1.6rem">📊 Test Result</h1>
+
+    <div class="score-ring" id="scoreRing">
+      <div class="score-num" id="scoreNum">0</div>
+      <div class="score-max" id="scoreMax">/ 720</div>
+    </div>
+    <div class="score-pct" id="scorePct">0%</div>
+    <div class="score-msg" id="scoreMsg"></div>
+
+    <div class="stats-grid">
+      <div class="stat-card" style="border-color:#0ea5e933">
+        <div class="stat-icon">📝</div>
+        <div class="stat-val" style="color:#0ea5e9" id="statAttempted">0</div>
+        <div class="stat-label">Attempted</div>
+        <div class="stat-sub" id="statAttemptedSub"></div>
+      </div>
+      <div class="stat-card" style="border-color:#6b728033">
+        <div class="stat-icon">⭕</div>
+        <div class="stat-val" style="color:#6b7280" id="statUnattempted">0</div>
+        <div class="stat-label">Unattempted</div>
+        <div class="stat-sub">skipped</div>
+      </div>
+      <div class="stat-card" style="border-color:#10b98133">
+        <div class="stat-icon">✓</div>
+        <div class="stat-val" style="color:#10b981" id="statCorrect">0</div>
+        <div class="stat-label">Correct</div>
+        <div class="stat-sub" id="statCorrectSub"></div>
+      </div>
+      <div class="stat-card" style="border-color:#ef444433">
+        <div class="stat-icon">✗</div>
+        <div class="stat-val" style="color:#ef4444" id="statIncorrect">0</div>
+        <div class="stat-label">Incorrect</div>
+        <div class="stat-sub" id="statIncorrectSub"></div>
+      </div>
+    </div>
+
+    <div class="scheme-box" id="schemeBox"></div>
+
+    <div class="result-actions">
+      <button class="btn btn-purple" onclick="goReview()">← Review Again</button>
+      <button class="btn btn-blue" onclick="newTest()">New Test ↩</button>
+    </div>
+  </div>
+</div>
+
+<script>
+// ── STATE ─────────────────────────────────────────────────────────────────────
+let numQ=180, marksOk=4, marksNeg=1, timerMin=180;
+let correctAns=[], userAns=[];
+let keyImgUrl=null;
+let timeLeft=0, timerInterval=null;
+let currentQ=0, reviewIdx=0;
+let viewMode='sequential'; // 'sequential'|'grid'
+
+const OPTIONS=['A','B','C','D'];
+const OPT_COLORS=['#3b82f6','#10b981','#f59e0b','#ef4444'];
+
+// ── UTILS ─────────────────────────────────────────────────────────────────────
+function $(id){return document.getElementById(id)}
+function showPage(id){
+  ['setupPage','keyPage','testPage','reviewPage','resultPage'].forEach(p=>{
+    const el=$(p);
+    if(p===id) el.classList.remove('hidden');
+    else el.classList.add('hidden');
+  });
+}
+
+function spin(id, delta){
+  const el=$(id);
+  const min=+el.min, max=+el.max;
+  el.value=Math.max(min,Math.min(max,(+el.value||min)+delta));
+  el.dispatchEvent(new Event('input'));
+}
+function clamp(el,min,max){
+  const v=+el.value;
+  if(isNaN(v)||v<min) el.value=min;
+  else if(v>max) el.value=max;
+}
+function fmt(s){
+  const h=Math.floor(s/3600),m=Math.floor((s%3600)/60),sec=s%60;
+  return [h,m,sec].map(x=>String(x).padStart(2,'0')).join(':');
+}
+function toggleOverlay(id){
+  $(id).classList.toggle('hidden');
+  if(id==='paletteOverlay' && !$(id).classList.contains('hidden')) buildPalette();
+}
+
+// ── SETUP ─────────────────────────────────────────────────────────────────────
+function updateSummary(){
+  const n=+$('numQ').value||1;
+  const mk=+$('marksOk').value||1;
+  const t=+$('timerMin').value||1;
+  $('sumMarks').textContent=n*mk;
+  $('sumDur').textContent=Math.floor(t/60)+'h '+(t%60)+'m';
+}
+
+function goAnswerKey(){
+  numQ=Math.max(1,+$('numQ').value||1);
+  marksOk=Math.max(1,+$('marksOk').value||1);
+  marksNeg=Math.max(0,+$('marksNeg').value||0);
+  timerMin=Math.max(1,+$('timerMin').value||1);
+  correctAns=Array(numQ).fill(null);
+  userAns=Array(numQ).fill(null);
+  buildKeyGrid();
+  showPage('keyPage');
+}
+
+// ── ANSWER KEY ────────────────────────────────────────────────────────────────
+function buildKeyGrid(){
+  const grid=$('keyGrid');
+  grid.innerHTML='';
+  for(let i=0;i<numQ;i++){
+    const row=document.createElement('div');
+    row.className='key-row';
+    row.id='kr'+i;
+    let html=`<span class="key-qnum">${i+1}.</span>`;
+    OPTIONS.forEach(opt=>{
+      html+=`<button class="bubble" style="width:28px;height:28px;font-size:11px" 
+        id="kb${i}${opt}" onclick="setCorrect(${i},'${opt}')">${opt}</button>`;
+    });
+    row.innerHTML=html;
+    grid.appendChild(row);
+  }
+  updateKeyFooter();
+}
+
+function setCorrect(i, opt){
+  correctAns[i]= correctAns[i]===opt ? null : opt;
+  OPTIONS.forEach(o=>{
+    const b=$(`kb${i}${o}`);
+    b.className='bubble';
+    b.style.cssText='width:28px;height:28px;font-size:11px';
+    if(correctAns[i]===o) b.classList.add(`sel-${o}`);
+  });
+  $('kr'+i).classList.toggle('set', correctAns[i]!==null);
+  updateKeyFooter();
+}
+
+function clearAllCorrect(){
+  correctAns=Array(numQ).fill(null);
+  for(let i=0;i<numQ;i++){
+    OPTIONS.forEach(o=>{
+      const b=$(`kb${i}${o}`);
+      b.className='bubble';
+      b.style.cssText='width:28px;height:28px;font-size:11px';
+    });
+    $('kr'+i).classList.remove('set');
+  }
+  updateKeyFooter();
+}
+
+function updateKeyFooter(){
+  const set=correctAns.filter(Boolean).length;
+  $('keyFooter').textContent=`${set} / ${numQ} answers set`;
+}
+
+function handleImgUpload(input){
+  const file=input.files[0];
+  if(!file) return;
+  keyImgUrl=URL.createObjectURL(file);
+  $('uploadPlaceholder').style.display='none';
+  const img=$('uploadedImg');
+  img.src=keyImgUrl;
+  img.style.display='block';
+}
+
+// ── TEST ──────────────────────────────────────────────────────────────────────
+function startTest(){
+  timeLeft=timerMin*60;
+  currentQ=0;
+  userAns=Array(numQ).fill(null);
+  showPage('testPage');
+  buildGridView();
+  buildSeqView();
+  buildSkipRow();
+  if(keyImgUrl){ $('keyImgBtn').style.display=''; $('keyImgLarge').src=keyImgUrl; }
+  else $('keyImgBtn').style.display='none';
+  setViewMode('sequential');
+  startTimer();
+  updateTestHeader();
+}
+
+function startTimer(){
+  clearInterval(timerInterval);
+  timerInterval=setInterval(()=>{
+    timeLeft--;
+    updateTimerDisplay();
+    if(timeLeft<=0){ clearInterval(timerInterval); submitTest(true); }
+  },1000);
+  updateTimerDisplay();
+}
+
+function updateTimerDisplay(){
+  const el=$('timerDisplay');
+  el.textContent=fmt(timeLeft);
+  el.style.color=timeLeft<300?'#ef4444':timeLeft<900?'#f59e0b':'#10b981';
+}
+
+function updateTestHeader(){
+  const done=userAns.filter(a=>a!==null).length;
+  $('attemptedLabel').textContent=`${done}/${numQ} done`;
+}
+
+function setViewMode(mode){
+  viewMode=mode;
+  if(mode==='grid'){
+    $('gridView').classList.remove('hidden');
+    $('seqView').style.display='none';
+    $('viewToggleBtn').textContent='⊟ Sequential';
+  } else {
+    $('gridView').classList.add('hidden');
+    $('seqView').style.display='';
+    $('viewToggleBtn').textContent='▦ Grid';
+    renderSeq();
+  }
+}
+
+function toggleView(){
+  setViewMode(viewMode==='grid'?'sequential':'grid');
+}
+
+// Grid View
+function buildGridView(){
+  const inner=$('gridInner');
+  inner.innerHTML='';
+  for(let i=0;i<numQ;i++){
+    const row=document.createElement('div');
+    row.className='grid-row';
+    row.id='gr'+i;
+    let html=`<span class="grid-qnum">${i+1}</span>`;
+    OPTIONS.forEach((opt,oi)=>{
+      html+=`<button class="bubble" style="width:30px;height:30px;font-size:11px"
+        id="gb${i}${opt}" onclick="setUser(${i},'${opt}')">${opt}</button>`;
+    });
+    row.innerHTML=html;
+    inner.appendChild(row);
+  }
+}
+
+function setUser(i, opt){
+  userAns[i]= userAns[i]===opt ? null : opt;
+  OPTIONS.forEach(o=>{
+    const b=$(`gb${i}${o}`);
+    if(b){ b.className='bubble'; b.style.cssText='width:30px;height:30px;font-size:11px'; if(userAns[i]===o) b.classList.add(`sel-${o}`); }
+  });
+  $('gr'+i).classList.toggle('answered', userAns[i]!==null);
+  updateTestHeader();
+  if(viewMode==='sequential') renderSeq();
+}
+
+// Sequential View
+function buildSeqView(){
+  const row=$('seqBubbles');
+  row.innerHTML='';
+  OPTIONS.forEach((opt,oi)=>{
+    const b=document.createElement('button');
+    b.className='bubble big-bubble';
+    b.id='sb'+opt;
+    b.textContent=opt;
+    b.onclick=()=>setUserSeq(opt);
+    row.appendChild(b);
+  });
+}
+
+function setUserSeq(opt){
+  userAns[currentQ]= userAns[currentQ]===opt ? null : opt;
+  // sync grid
+  OPTIONS.forEach(o=>{
+    const b=$(`gb${currentQ}${o}`);
+    if(b){ b.className='bubble'; b.style.cssText='width:30px;height:30px;font-size:11px'; if(userAns[currentQ]===o) b.classList.add(`sel-${o}`); }
+  });
+  $('gr'+currentQ)?.classList.toggle('answered', userAns[currentQ]!==null);
+  renderSeq();
+  updateTestHeader();
+}
+
+function renderSeq(){
+  $('seqQNum').textContent=currentQ+1;
+  $('seqProgressLabel').textContent=`Q ${currentQ+1} of ${numQ}`;
+  $('seqAttempted').textContent=`${userAns.filter(a=>a!==null).length} attempted`;
+  $('progressFill').style.width=`${((currentQ+1)/numQ)*100}%`;
+  const sel=userAns[currentQ];
+  const hint=$('seqHint');
+  if(sel){ hint.textContent=`✓ Selected: ${sel}`; hint.classList.add('selected'); }
+  else { hint.textContent='Tap a bubble to mark answer'; hint.classList.remove('selected'); }
+  $('seqCard').classList.toggle('answered', sel!==null);
+  OPTIONS.forEach((opt,oi)=>{
+    const b=$('sb'+opt);
+    b.className='bubble big-bubble';
+    if(userAns[currentQ]===opt) b.classList.add(`sel-${opt}`);
+  });
+  // Prev btn
+  $('prevBtn').style.opacity=currentQ===0?'0.4':'1';
+  $('prevBtn').disabled=currentQ===0;
+  // Next/Submit
+  const nb=$('nextBtn');
+  if(currentQ===numQ-1){
+    nb.textContent='Submit ✓'; nb.className='btn btn-red'; nb.onclick=submitTest;
+  } else {
+    nb.textContent='Next →'; nb.className='btn btn-blue'; nb.onclick=()=>navigate(1);
+  }
+  renderDots();
+}
+
+function navigate(delta){
+  currentQ=Math.max(0,Math.min(numQ-1,currentQ+delta));
+  renderSeq();
+}
+
+function renderDots(){
+  const row=$('dotsRow');
+  row.innerHTML='';
+  const start=Math.max(0,Math.min(currentQ-5,numQ-11));
+  for(let i=0;i<11;i++){
+    const idx=start+i;
+    if(idx>=numQ) break;
+    const d=document.createElement('button');
+    d.className='dot';
+    if(idx===currentQ) d.classList.add('cur'); else if(userAns[idx]) d.classList.add('done'); else d.classList.add('plain');
+    if(idx!==currentQ){ d.style.width='8px'; d.style.height='8px'; }
+    d.onclick=()=>{ currentQ=idx; renderSeq(); };
+    row.appendChild(d);
+  }
+}
+
+function buildSkipRow(){
+  const row=$('skipRow');
+  row.innerHTML='';
+  const pts=[0, Math.floor(numQ/4), Math.floor(numQ/2), Math.floor(3*numQ/4), numQ-1];
+  [...new Set(pts)].forEach(n=>{
+    const b=document.createElement('button');
+    b.className='skip-btn';
+    b.textContent=`Q${n+1}`;
+    b.onclick=()=>{ currentQ=n; renderSeq(); };
+    row.appendChild(b);
+  });
+}
+
+function buildPalette(){
+  const grid=$('paletteGrid');
+  grid.innerHTML='';
+  for(let i=0;i<numQ;i++){
+    const b=document.createElement('button');
+    b.className='pal-btn';
+    b.textContent=i+1;
+    if(i===currentQ&&viewMode==='sequential') b.classList.add('pal-current');
+    else if(userAns[i]) b.classList.add('pal-attempted');
+    else b.classList.add('pal-plain');
+    b.onclick=()=>{ currentQ=i; if(viewMode==='sequential') renderSeq(); toggleOverlay('paletteOverlay'); };
+    grid.appendChild(b);
+  }
+}
+
+function submitTest(auto=false){
+  clearInterval(timerInterval);
+  reviewIdx=0;
+  renderReview();
+  showPage('reviewPage');
+}
+
+// ── REVIEW ────────────────────────────────────────────────────────────────────
+function renderReview(){
+  const q=reviewIdx;
+  $('revProgress').textContent=`${q+1} / ${numQ}`;
+  $('revProgressFill').style.width=`${((q+1)/numQ)*100}%`;
+  $('revQNum').textContent=`Q${q+1}`;
+
+  const uAns=userAns[q], cAns=correctAns[q];
+  const isCorrect=uAns&&cAns&&uAns===cAns;
+  const isWrong=uAns&&cAns&&uAns!==cAns;
+
+  const card=$('revCard');
+  card.style.borderColor=isCorrect?'#10b981':isWrong?'#ef4444':'#1e3a5f';
+
+  const status=$('revStatus');
+  if(isCorrect){ status.textContent=`✓ CORRECT +${marksOk}`; status.style.color='#10b981'; }
+  else if(isWrong){ status.textContent=`✗ WRONG −${marksNeg}`; status.style.color='#ef4444'; }
+  else { status.textContent='— SKIPPED'; status.style.color='#6b7280'; }
+
+  const bubblesDiv=$('revBubbles');
+  bubblesDiv.innerHTML='';
+  OPTIONS.forEach(opt=>{
+    const isC=opt===cAns, isU=opt===uAns;
+    const b=document.createElement('div');
+    b.className='bubble rev-bubble';
+    b.textContent=opt;
+    b.style.cursor='default';
+    if(isC){ b.classList.add('correct'); }
+    else if(isU){ b.classList.add('wrong'); }
+    bubblesDiv.appendChild(b);
+  });
+
+  $('revInfo').innerHTML= cAns
+    ? `Correct: <span style="color:#10b981;font-weight:bold">${cAns}</span> &nbsp;|&nbsp; Your answer: <span style="color:${isCorrect?'#10b981':uAns?'#ef4444':'#6b7280'};font-weight:bold">${uAns||'—'}</span>`
+    : `<span style="color:#334155">No answer key set for this question</span>`;
+
+  $('revPrevBtn').style.opacity=q===0?'0.4':'1';
+  $('revPrevBtn').disabled=q===0;
+
+  const nb=$('revNextBtn');
+  if(q<numQ-1){ nb.textContent='Next →'; nb.className='btn btn-purple'; nb.onclick=()=>reviewNav(1); }
+  else { nb.textContent='See Results ✓'; nb.className='btn btn-green'; nb.onclick=showResult; }
+}
+
+function reviewNav(delta){
+  reviewIdx=Math.max(0,Math.min(numQ-1,reviewIdx+delta));
+  renderReview();
+}
+
+function goReview(){
+  reviewIdx=0;
+  renderReview();
+  showPage('reviewPage');
+}
+
+// ── RESULT ────────────────────────────────────────────────────────────────────
+function showResult(){
+  let correct=0,incorrect=0,attempted=0;
+  for(let i=0;i<numQ;i++){
+    if(userAns[i]!=null){
+      attempted++;
+      if(correctAns[i]!=null){
+        if(userAns[i]===correctAns[i]) correct++;
+        else incorrect++;
+      }
+    }
+  }
+  const unattempted=numQ-attempted;
+  const total=correct*marksOk - incorrect*marksNeg;
+  const max=numQ*marksOk;
+  const pct=max>0?Math.max(0,(total/max)*100).toFixed(1):0;
+  const scoreColor=pct>=60?'#10b981':pct>=40?'#f59e0b':'#ef4444';
+
+  $('scoreRing').style.borderColor=scoreColor;
+  $('scoreRing').style.boxShadow=`0 0 40px ${scoreColor}33`;
+  $('scoreNum').textContent=total;
+  $('scoreMax').textContent=`/ ${max}`;
+  $('scorePct').textContent=`${pct}%`;
+  $('scorePct').style.color=scoreColor;
+  $('scoreMsg').textContent=pct>=60?'Good performance!':pct>=40?'Keep practicing!':'Needs more work — don\'t give up!';
+
+  $('statAttempted').textContent=attempted;
+  $('statAttemptedSub').textContent=`${numQ} total`;
+  $('statUnattempted').textContent=unattempted;
+  $('statCorrect').textContent=correct;
+  $('statCorrectSub').textContent=`+${correct*marksOk} marks`;
+  $('statIncorrect').textContent=incorrect;
+  $('statIncorrectSub').textContent=`−${incorrect*marksNeg} marks`;
+  $('schemeBox').innerHTML=`Marking Scheme: <span style="color:#10b981">+${marksOk}</span> correct &nbsp;/&nbsp; <span style="color:#ef4444">−${marksNeg}</span> wrong &nbsp;·&nbsp; ${numQ} Questions`;
+
+  showPage('resultPage');
+}
+
+function newTest(){
+  clearInterval(timerInterval);
+  keyImgUrl=null;
+  $('uploadedImg').style.display='none';
+  $('uploadPlaceholder').style.display='';
+  $('uploadedImg').src='';
+  $('imgInput').value='';
+  showPage('setupPage');
+}
+
+// ── INIT ──────────────────────────────────────────────────────────────────────
+updateSummary();
+</script>
+</body>
+</html>
